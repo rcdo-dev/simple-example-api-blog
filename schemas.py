@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class UserCreate(BaseModel):
     username: str
     email: str
-    password: str
+    password: str = Field(..., max_length=72, description="Senha do usuário (máximo 72 bytes).")
 
 # 2. UserPublic: Schema para a resposta do usuário (Saída GET/POST)
 # Incluímos o 'id' (gerado pelo DB), mas omitimos a 'password'

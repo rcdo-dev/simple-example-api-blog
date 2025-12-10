@@ -1,6 +1,7 @@
 # main.py
 
 from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional
 # from schemas import PostBase, PostDisplay
 from sqlmodel import Session, select
@@ -10,7 +11,7 @@ from database import engine, create_db_and_tables, get_session
 from dependencies import check_max_limit, ckeck_admin_permission
 from models import User, Post
 from schemas import UserCreate, UserPublic, PostCreate, PostPublic
-from security import get_password_hash
+from security import get_password_hash, verify_password
 
 def on_start_up():
     print("Iniciando e criando o DB e as tabelas...")
@@ -33,6 +34,32 @@ app = FastAPI(
         }
     ]
 )
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+@app.post("/auth/token", tags=["users"])
+def login_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_session)
+):
+    """
+    Recebe username (email) e password e verifica as credenciais.
+    """
+
+    user = db.exec(select(User).where(User.email == form_data.username)).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas.",
+            headers={"WWW-Authenticate":"Bearer"}
+        )
+    
+    if not verify_password(form_data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas.",
+            headers={"WWW-Authenticate":"Bearer"}
+        )
+    return {"message": "Autenticação bem-sucedida!"}
 
 @app.get("/")
 def home():
