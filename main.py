@@ -10,6 +10,7 @@ from database import engine, create_db_and_tables, get_session
 from dependencies import check_max_limit, ckeck_admin_permission
 from models import User, Post
 from schemas import UserCreate, UserPublic, PostCreate, PostPublic
+from security import get_password_hash
 
 def on_start_up():
     print("Iniciando e criando o DB e as tabelas...")
@@ -130,7 +131,22 @@ def create_user(user: UserCreate, db: Session = Depends(get_session)):
     """
     Cria o registro de um novo usuário.
     """
-    db_user = User.model_validate(user)
+
+    # 1. Verificar se o usuário já existe
+    existig_user = db.exec(select(User).where(User.email == user.email)).first()
+    if existig_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já registrado")
+
+    # 2. HASH DA SENHA: Esta é a linha crucial de segurança
+    hashed_password = get_password_hash(user.password)
+
+    # 3. Cria um objeto do DB, usando a senha hasheada
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password # Salva o hash, não a senha em texto puro
+    )
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
