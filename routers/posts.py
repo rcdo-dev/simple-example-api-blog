@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from core.database import get_session
 from models import Post, User
 from schemas import PostCreate, PostPublic
-from utilities.dependencies import check_max_limit, ckeck_admin_permission
+from utilities.dependencies import check_max_limit, get_current_active_user
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -61,7 +61,28 @@ def read_post(post_id: int, db: Session = Depends(get_session)):
     return post
 
 
-@router.delete("/{post_id}", status_code=204)
-def delete_post(post_id: int, admin_user: dict = Depends(ckeck_admin_permission)):
-    # Aqui depois implementaremos a lógica real de delete no DB
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(
+    post_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Deleta um post se ele pertencer ao usuário logado.
+    """
+    post_db = db.get(Post, post_id)
+
+    if not post_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post não encontrado"
+        )
+
+    if post_db.author_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION,
+            detail="Não autorizado a deletar este post.",
+        )
+
+    db.delete(post_db)
+    db.commit()
     return None
