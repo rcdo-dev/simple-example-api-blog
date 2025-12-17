@@ -1,5 +1,7 @@
-from typing import Optional, List
-from sqlmodel import Field, SQLModel, Relationship
+from typing import List, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
+
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -9,6 +11,7 @@ class User(SQLModel, table=True):
 
     # 1. Relacionamento: Um usuário pode ter muitos posts (lazy loading)
     posts: List["Post"] = Relationship(back_populates="author")
+
 
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
