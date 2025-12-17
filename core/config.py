@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Database Settings
-    DATABASE_URL: str = "sqlite:/// ./blog.db"
+    DATABASE_URL: str = "sqlite:///blog.db"
 
     # Configuração do Pydantic para carregar de um arquivo .env.
     # O Pydantic irá primeiro procurar variáveis de ambiente e, em seguida,

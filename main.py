@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from core.database import create_db_and_tables
-from routers import auth, users
+from routers import auth, posts, users
 
 
 def on_start_up():
@@ -22,6 +22,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(posts.router)
 
 
 @app.get("/")

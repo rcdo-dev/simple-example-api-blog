@@ -6,9 +6,9 @@ from sqlmodel import Session, select
 from core.database import get_session
 from core.security import get_password_hash
 
-from ..models import User
-from ..schemas import UserCreate, UserPublic
-from ..utilities.dependencies import get_current_active_user  # Para rotas protegidas
+from models import User
+from schemas import UserCreate, UserPublic
+from utilities.dependencies import get_current_active_user  # Para rotas protegidas
 
 router = APIRouter(prefix="/users", tags=["users"])
 
