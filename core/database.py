@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, SQLModel, Session
+from core.config import settings
 
-DATABASE_FILE = "blog.db"
-sqlite_url = f"sqlite:///{DATABASE_FILE}"
+sqlite_url = settings.DATABASE_URL
 
 engine = create_engine(sqlite_url, echo=True)
 
