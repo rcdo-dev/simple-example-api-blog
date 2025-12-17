@@ -60,6 +60,47 @@ def read_post(post_id: int, db: Session = Depends(get_session)):
         )
     return post
 
+@router.put("/{post_id}", response_model=PostPublic)
+def update_post(
+    post_id: int,
+    post_data: PostCreate,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Atualiza um post existente. 
+    Verifica se o post existe e se o usuário logado é o autor.
+    """
+
+    # 1. Buscar o post no banco de dados
+    db_post = db.get(Post, post_id)
+    if not db_post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post não encontrado."
+        )
+    
+    # 2. VALIDAÇÃO DE SEGURANÇA: O autor é quem diz ser?
+    if db_post.author_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para editar esse post."
+        )
+    
+    # 3. Atualizar os dados
+    # Pegamos os dados enviados e transformamos em um dicionário
+    update_data = post_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_post, key, value)
+    
+    # 4. Persistir no banco
+    db.add(db_post)
+    db.commit()
+    db.refresh(db_post)
+
+    return db_post
+
+
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(
@@ -79,7 +120,7 @@ def delete_post(
 
     if post_db.author_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Não autorizado a deletar este post.",
         )
 
